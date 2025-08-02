@@ -5,7 +5,7 @@ let interval;
 function login(){
     const options = {
         method: "GET",
-        hostname: "127.0.0.1",
+        hostname: "localhost",
         port: 8000,
         path: "/login",
         headers: {
