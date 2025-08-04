@@ -5,16 +5,16 @@ const crypto = require("crypto");
 const fs = require("fs");
 
 const server = http.createServer(async (req, res) => {
-    console.log(req.headers);
-    console.log(req.url);
-    
+    logToFile(`Headers: ${JSON.stringify(req.headers)}\n`);
+    logToFile(`URL: ${req.url}\n`);
+
     let url = processURL(req.url);
-    console.log(url.path);
-    console.log(url.queryString);
+    logToFile(`Path: ${url.path}\n`);
+    logToFile(`Query: ${JSON.stringify(url.queryString)}\n`);
 
     if(req.headers["accept-encoding"]){
         res.statusCode = 400;
-        res.statusMessage = 'Bad Request'
+        res.statusMessage = 'Bad Request';
         res.end("we will not serve you!");
         return;
     }
@@ -46,7 +46,7 @@ const server = http.createServer(async (req, res) => {
                 res.end(token);
             } else {
                 res.statusCode = 403;
-                res.statusMessage = 'Not Authorized'
+                res.statusMessage = 'Not Authorized';
                 res.end("credentials are not vaild!");
             }
         break;
@@ -55,20 +55,21 @@ const server = http.createServer(async (req, res) => {
                 res.end("http server running on node.js.");
             } else {
                 res.statusCode = 403;
-                res.statusMessage = 'Not Authorized'
+                res.statusMessage = 'Not Authorized';
                 res.end();    
             }
         break;
         default:
             res.statusCode = 406;
-            res.statusMessage = 'Not Acceptable'
+            res.statusMessage = 'Not Acceptable';
             res.end();
     }
 
 });
 
 server.listen(8000, () => {
-    console.log('server is running on poprt 8000');
+    console.log('server is running on port 8000');
+    logToFile('server is running on port 8000\n');
 });
 
 function processURL(str){
@@ -84,15 +85,15 @@ async function checkAuth(auth){
 
     if(auth.startsWith('Basic ')){
         auth = auth.replace('Basic ', '');
-        console.log(auth);
+        logToFile(`Basic Auth: ${auth}\n`);
         let credentials = Buffer.from(auth, 'base64').toString();
-        console.log(credentials);
+        logToFile(`Decoded Credentials: ${credentials}\n`);
         credentials = credentials.split(':');
         return ( credentials[0] == 'metwally' && credentials[1] == 'VeryStrongPassword' );
 
     } else if(auth.startsWith('Bearer ')){
         auth = auth.replace('Bearer ', '');
-        console.log(auth);
+        logToFile(`Bearer Token: ${auth}\n`);
         let tokens = await fs.promises.readFile('tokens', 'utf-8');
         if(tokens){
             return (tokens.indexOf(auth) >= 0);
@@ -102,28 +103,11 @@ async function checkAuth(auth){
     } else {
         return false;
     }
-
 }
-
-/*
-
-client requesting a token using username & password
-serverr generat the token
-store the token in a file
-sending the token to the client
-
-setTimeout a few seconds then delete the token from the file
-
-----
-
-client sending a request using the token
-check if the token exists in the file
-
-*/
 
 async function generateToken(){
     let token = crypto.randomBytes(16).toString('hex');
-    console.log(token);
+    logToFile(`Generated Token: ${token}\n`);
     
     await fs.promises.writeFile('tokens', token + '\n', 'utf-8');
     setTimeout(resetTokens, 20000);
@@ -131,6 +115,11 @@ async function generateToken(){
 }
 
 async function resetTokens(){
-    console.log('reset tokens');
+    logToFile('reset tokens\n');
     await fs.promises.writeFile('tokens', '', 'utf-8');
+}
+
+// Helper function to log to a file
+function logToFile(data){
+    fs.appendFileSync('server.log', `[${new Date().toISOString()}] ${data}`);
 }
