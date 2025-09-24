@@ -7,6 +7,9 @@ RUN npm install -g pm2
 # تحديد مجلد العمل داخل الكونتينر
 WORKDIR /app
 
+# نسخ package.json + package-lock.json الأول (لو موجودين)
+COPY package*.json ./
+
 # تثبيت الـ dependencies
 RUN npm install
 
