@@ -68,7 +68,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(8000, () => {
-    console.log('server is running on port 8000');
+    console.log('server is running onn port 8000');
     logToFile('server is running on port 8000\n');
 });
 
